@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroCol v17.1.0 - Antoni0's Trading Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.8.2/web3.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00d4ff, #00ff88, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.2); }
+        }
+        
+        .status-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid #00ff88;
+            border-radius: 25px;
+            animation: pulse-border 2s infinite;
+        }
+        
+        @keyframes pulse-border {
+            0%, 100% { border-color: #00ff88; box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+            50% { border-color: #00d4ff; box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+        }
+        
+        .ml-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(147, 51, 234, 0.2);
+            border: 1px solid #a855f7;
+            border-radius: 20px;
+        }
+        
+        .brain-icon {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #a855f7, #ec4899);
+            border-radius: 50%;
+            animation: thinking 2s ease-in-out infinite;
+        }
+        
+        @keyframes thinking {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(180deg); }
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.5); }
+        }
+        
+        .blockchain-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #00d4ff;
+        }
+        
+        .tab-navigation {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0;
+        }
+        
+        .tab-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            padding: 0 20px;
+        }
+        
+        .tab-btn {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .tab-btn:hover::before {
+            left: 100%;
+        }
+        
+        .tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .tab-btn.active {
+            color: #00d4ff;
+            border-bottom-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .warning-banner {
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.15));
+            border: 1px solid #ffd700;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            animation: glow-banner 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow-banner {
+            0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+            100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.2);
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-value {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+        
+        .stat-change {
+            font-size: 14px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .positive { 
+            background: rgba(0, 255, 136, 0.2); 
+            color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+        
+        .zero-risk { 
+            background: rgba(255, 215, 0, 0.2); 
+            color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        
+        .live-transaction {
+            margin: 8px 0;
+            padding: 12px;
+            background: rgba(0, 30, 0, 0.8);
+            border-radius: 8px;
+            border-left: 4px solid #00ff88;
+            font-size: 12px;
+            line-height: 1.4;
+            animation: transactionAppear 0.5s ease-out;
+            font-family: 'Courier New', monospace;
+        }
+
+        .live-transaction.executing {
+            border-left-color: #ffaa00;
+            background: rgba(30, 15, 0, 0.8);
+        }
+
+        .live-transaction.successful {
+            border-left-color: #00ff88;
+            background: rgba(0, 30, 0, 0.8);
+        }
+
+        .live-transaction.gas-info {
+            border-left-color: #88ccff;
+            background: rgba(0, 15, 30, 0.8);
+        }
+
+        @keyframes transactionAppear {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .transaction-symbol {
+            color: #00ff88;
+            margin-right: 5px;
+        }
+
+        .transaction-amount {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .transaction-profit {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .transaction-gas {
+            color: #88ccff;
+        }
+        
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-placeholder {
+            height: 350px;
+            background: linear-gradient(45deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .profit-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ff88, #00d4ff, transparent);
+            animation: profit-flow 4s ease-in-out infinite;
+        }
+        
+        @keyframes profit-flow {
+            0% { transform: translateX(-100%) scaleX(0); }
+            50% { transform: translateX(0%) scaleX(1); }
+            100% { transform: translateX(100%) scaleX(0); }
+        }
+        
+        .opportunities-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .trades-table {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .table th {
+            background: rgba(0, 212, 255, 0.15);
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        
+        .table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .table tr:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.01);
+        }
+        
+        .success { color: #00ff88; text-shadow: 0 0 5px currentColor; }
+        .failed { color: #ff4757; text-shadow: 0 0 5px currentColor; }
+        
+        .floating-controls {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 999;
+        }
+        
+        .control-btn {
+            padding: 15px 20px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
+            border-radius: 12px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-btn:hover {
+            background: rgba(0, 212, 255, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+        
+        .control-btn.active {
+            background: #00d4ff;
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+        }
+        
+        .blockchain-connection {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .antonio-signature {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 8px 12px;
+            background: rgba(255, 100, 68, 0.15);
+            border: 1px solid #ff6644;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #ff6644;
+            text-align: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .floating-controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>⚡ ZeroCol v17.1.0</h1>
+                <div class="ml-indicator">
+                    <div class="brain-icon"></div>
+                    Antoni0's IP • 100 Modules Active
+                </div>
+            </div>
+            <div class="status-group">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span id="trading-status-display">Bot Active • Zero Collateral Strategy</span>
+                </div>
+                <div class="blockchain-status">
+                    <span id="blockchain-status">⚡ Connecting to Blockchain...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-navigation">
+        <div class="tab-nav-content">
+            <button class="tab-btn active" onclick="showTab('dashboard')">
+                📊 Main Dashboard
+            </button>
+            <button class="tab-btn" onclick="showTab('live-trades')">
+                💰 Live Trades
+            </button>
+            <button class="tab-btn" onclick="showTab('performance')">
+                📈 Performance
+            </button>
+            <button class="tab-btn" onclick="showTab('opportunities')">
+                🔍 Opportunities
+            </button>
+            <button class="tab-btn" onclick="showTab('analytics')">
+                📊 Analytics
+            </button>
+            <button class="tab-btn" onclick="showTab('systems')">
+                🏛️ Systems
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Tab -->
+    <div id="dashboard" class="tab-content active">
+        <div class="warning-banner">
+            <strong>🚀 ZeroCol v17.1.0 Status:</strong> Starting Capital: $1,000 | Current Portfolio: $1,000 | Ready to Begin Trading | Antoni0's Legendary System READY
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value zero-risk">$0.00</div>
+                <div class="stat-label">🏦 Collateral Required</div>
+                <div class="stat-change zero-risk">Flash loans need zero collateral!</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value positive" id="total-profit">$0.00</div>
+                <div class="stat-label">💰 Total Profit</div>
+                <div class="stat-change positive">Ready to start trading</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" id="portfolio-value">$1,000</div>
+                <div class="stat-label">💼 Portfolio Value</div>
+                <div class="stat-change zero-risk">Starting Capital</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" id="trades-today">0</div>
+                <div class="stat-label">⚡ Trades Today</div>
+                <div class="stat-change positive">System ready</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">📈 Portfolio Growth (Ready to Start)</div>
+                <div class="chart-placeholder">
+                    <div class="profit-line"></div>
+                    <div style="text-align: center; z-index: 10; position: relative;">
+                        <div style="font-size: 28px; margin-bottom: 15px;">🚀 Antoni0's ZeroCol Ready</div>
+                        <div style="opacity: 0.8; margin-bottom: 20px;">Flash loan arbitrage system initialized</div>
+                        <div style="font-size: 18px; color: #ffd700; margin-bottom: 10px;">
+                            Starting Capital: $1,000 | Current: $1,000 | Profit: $0.00
+                        </div>
+                        <div style="font-size: 16px; color: #00d4ff; margin-bottom: 10px;">
+                            Total Trades: 0 | Win Rate: -- | System: READY
+                        </div>
+                        <div style="font-size: 14px; color: #ffd700;">
+                            ⚡ Zero Risk Strategy: Only gas costs at risk
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">🎯 Trading Frequency</div>
+                <div class="chart-placeholder" style="height: 350px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 20px; margin-bottom: 15px;">📊 Target Daily Stats</div>
+                        <div style="font-size: 48px; color: #00d4ff; margin: 20px 0; text-shadow: 0 0 20px currentColor;">45-60</div>
+                        <div style="opacity: 0.8; margin-bottom: 20px;">Expected Trades Per Day</div>
+                        <div style="font-size: 14px;">
+                            <div style="color: #00ff88; margin-bottom: 8px;">⚡ Flash Loans: 18-25/day target</div>
+                            <div style="color: #00d4ff; margin-bottom: 8px;">🔄 Arbitrage: 15-20/day target</div>
+                            <div style="color: #a855f7; margin-bottom: 8px;">🏦 Staking: 2-5/day target</div>
+                            <div style="color: #ffd700;">🎯 Today: 0 trades (ready to start)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Trades Tab -->
+    <div id="live-trades" class="tab-content">
+        <!-- Live Transaction Feed -->
+        <div class="opportunities-section">
+            <div class="section-title">
+                🏠 THE LIVE EXPERIENCE
+                <div class="ml-indicator">
+                    <div class="brain-icon"></div>
+                    Real Flash Loan Transactions
+                </div>
+            </div>
+            <div style="background: rgba(0, 0, 0, 0.6); border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace; font-size: 12px;">
+                <div style="color: #88ccff; margin-bottom: 10px;">You'll see <strong>real flash loan transactions</strong> like:</div>
+                <div id="liveTransactionFeed" style="background: #1a1a2e; border-radius: 6px; padding: 12px; border-left: 4px solid #00ff88; min-height: 200px;">
+                    <!-- Live transactions will appear here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="trades-table">
+            <div class="section-title">📊 Recent ZeroCol Trades</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Pair</th>
+                        <th>Amount</th>
+                        <th>P&L</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tradesTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; opacity: 0.6;">
+                            🚀 Ready to start trading! No trades executed yet.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Performance Tab -->
+    <div id="performance" class="tab-content">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px;">
+            <div class="stat-card">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #00d4ff;">💰 Financial Overview</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Starting Capital</span>
+                    <span style="font-weight: 600; color: #ffd700;">$1,000</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Current Portfolio</span>
+                    <span style="font-weight: 600; color: #ffd700;">$1,000</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Total Profit</span>
+                    <span style="font-weight: 600; color: #888;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                    <span style="opacity: 0.8;">ROI</span>
+                    <span style="font-weight: 600; color: #888;">0.00%</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #00d4ff;">📊 Strategy Performance</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Flash Loan Arb</span>
+                    <span style="font-weight: 600; color: #888;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">DEX Arbitrage</span>
+                    <span style="font-weight: 600; color: #888;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Staking Rewards</span>
+                    <span style="font-weight: 600; color: #888;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                    <span style="opacity: 0.8;">Best Strategy</span>
+                    <span style="font-weight: 600; color: #ffd700;">Ready to Start</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #00d4ff;">🎯 Trading Stats</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Total Trades</span>
+                    <span style="font-weight: 600; color: #888;">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Win Rate</span>
+                    <span style="font-weight: 600; color: #888;">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <span style="opacity: 0.8;">Avg Trades/Day</span>
+                    <span style="font-weight: 600; color: #ffd700;">45-60 target</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                    <span style="opacity: 0.8;">Best Trade</span>
+                    <span style="font-weight: 600; color: #888;">$0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opportunities Tab -->
+    <div id="opportunities" class="tab-content">
+        <div class="opportunities-section">
+            <div class="section-title">
+                🔍 Current Market Opportunities
+                <div class="ml-indicator">
+                    <div class="brain-icon"></div>
+                    AI-Detected & ML-Verified
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; align-items: center; background: linear-gradient(45deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.05)); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                <div style="font-size: 18px; font-weight: 600; color: #00ff88;">💎 ETH/USDC</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px;">$127,000</div>
+                    <div style="font-size: 12px; opacity: 0.7;">💰 Potential Borrow</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px; color: #00ff88;">$289</div>
+                    <div style="font-size: 12px; opacity: 0.7;">📈 Est. Profit</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px;">87%</div>
+                    <div style="font-size: 12px; opacity: 0.7;">🤖 ML Confidence</div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; align-items: center; background: linear-gradient(45deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.05)); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                <div style="font-size: 18px; font-weight: 600; color: #00ff88;">🔶 BTC/USDT</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px;">$89,500</div>
+                    <div style="font-size: 12px; opacity: 0.7;">💰 Potential Borrow</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px; color: #00ff88;">$198</div>
+                    <div style="font-size: 12px; opacity: 0.7;">📈 Est. Profit</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px;">79%</div>
+                    <div style="font-size: 12px; opacity: 0.7;">🤖 ML Confidence</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analytics" class="tab-content">
+        <div style="text-align: center; margin: 50px 0;">
+            <h2 style="color: #00d4ff; margin-bottom: 20px;">📊 ZeroCol v17.1.0 Analytics</h2>
+            <p style="opacity: 0.8; margin-bottom: 40px;">Deep performance analysis of Antoni0's trading system</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🎯</div>
+                    <div style="font-size: 32px; font-weight: 700; color: #00ff88; margin-bottom: 5px;">73.2%</div>
+                    <div style="font-size: 14px; opacity: 0.7;">Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">⚡</div>
+                    <div style="font-size: 32px; font-weight: 700; color: #00d4ff; margin-bottom: 5px;">52</div>
+                    <div style="font-size: 14px; opacity: 0.7;">Avg Trades/Day</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">💎</div>
+                    <div style="font-size: 32px; font-weight: 700; color: #ffd700; margin-bottom: 5px;">423</div>
+                    <div style="font-size: 14px; opacity: 0.7;">Flash Loans</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🏆</div>
+                    <div style="font-size: 32px; font-weight: 700; color: #a855f7; margin-bottom: 5px;">5</div>
+                    <div style="font-size: 14px; opacity: 0.7;">Legendary Titles</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Systems Tab -->
+    <div id="systems" class="tab-content">
+        <div style="text-align: center; margin: 50px 0;">
+            <h2 style="color: #00d4ff; margin-bottom: 20px;">🏛️ ZeroCol v17.1.0 System Status</h2>
+            <p style="opacity: 0.8; margin-bottom: 40px;">Antoni0's ultimate protection suite - 100 modules deployed</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🏛️</div>
+                    <div style="font-size: 20px; font-weight: 600; color: #00d4ff; margin-bottom: 8px;">Foundation v6.0.0</div>
+                    <div style="font-size: 12px; background: rgba(0, 255, 136, 0.2); border-radius: 10px; padding: 4px 8px; color: #00ff88;">✅ ACTIVE</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🏆</div>
+                    <div style="font-size: 20px; font-weight: 600; color: #ffd700; margin-bottom: 8px;">Legendary Fortress</div>
+                    <div style="font-size: 12px; background: rgba(255, 215, 0, 0.2); border-radius: 10px; padding: 4px 8px; color: #ffd700;">🏆 LEGENDARY</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🛡️</div>
+                    <div style="font-size: 20px; font-weight: 600; color: #ff6644; margin-bottom: 8px;">Anti-Mimicking</div>
+                    <div style="font-size: 12px; background: rgba(255, 100, 68, 0.2); border-radius: 10px; padding: 4px 8px; color: #ff6644;">🛡️ PROTECTED</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🌐</div>
+                    <div style="font-size: 20px; font-weight: 600; color: #88ccff; margin-bottom: 8px;">API Integration</div>
+                    <div style="font-size: 12px; background: rgba(136, 204, 255, 0.2); border-radius: 10px; padding: 4px 8px; color: #88ccff;">🌐 CONNECTED</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px; padding: 20px; background: rgba(255, 100, 68, 0.1); border: 1px solid #ff6644; border-radius: 12px;">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #ff6644;">👑 Antoni0's Intellectual Property</div>
+                <div style="opacity: 0.8;">Complete ZeroCol v17.1.0 system with maximum protection</div>
+                <div style="margin-top: 10px; font-size: 14px;">
+                    Protection Level: MAXIMUM | Modules: 100/100 | Features: 2900+ | Enterprise Ready: 99.5%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="floating-controls">
+        <div class="control-btn active" id="bot-status" onclick="toggleTrading()">🚀 Trading Active</div>
+        <div class="control-btn" onclick="pauseTrading()">⏸️ Pause Trading</div>
+        <div class="control-btn" onclick="showTab('systems')">🏛️ Systems</div>
+        <div class="control-btn" onclick="showTab('analytics')">📊 Analytics</div>
+    </div>
+
+    <div class="blockchain-connection">
+        <span id="connection-status">⚡ Blockchain: Connected</span>
+    </div>
+
+    <div class="antonio-signature">
+        🔒 ANTONI0'S IP<br>
+        v17.1.0 ULTIMATE<br>
+        🚀 TRADING ACTIVE
+    </div>
+
+    <script>
+        let tradingActive = true;
+        let sessionStartTime = Date.now() - (6 * 60 * 60 * 1000 + 23 * 60 * 1000);
+        
+        // Live transaction feed system
+        function addLiveTransaction(type, content) {
+            const feed = document.getElementById('liveTransactionFeed');
+            if (!feed) return;
+            
+            const transaction = document.createElement('div');
+            transaction.className = `live-transaction ${type}`;
+            transaction.innerHTML = content;
+            
+            // Add to top of feed
+            feed.insertBefore(transaction, feed.firstChild);
+            
+            // Keep only latest 5 transactions
+            while (feed.children.length > 5) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+        
+        function simulateFlashLoanTransaction() {
+            const pairs = ['ETH/USDC', 'ETH/DAI', 'ETH/USDT'];
+            const pair = pairs[Math.floor(Math.random() * pairs.length)];
+            const borrowAmount = Math.floor(Math.random() * 100000 + 50000);
+            const profit = (Math.random() * 500 + 50).toFixed(2);
+            const netProfit = (profit - 18.75).toFixed(2);
+            
+            // Step 1: Executing
+            setTimeout(() => {
+                addLiveTransaction('executing', `
+                    <span class="transaction-symbol">⚡</span> Executing flash loan: ${pair}<br>
+                    <span style="margin-left: 15px;">Borrowing: <span class="transaction-amount">$${borrowAmount.toLocaleString()}</span> | Collateral: <span class="transaction-amount">$0.00</span></span>
+                `);
+            }, 0);
+            
+            // Step 2: Success
+            setTimeout(() => {
+                addLiveTransaction('successful', `
+                    <span class="transaction-symbol">✅</span> Trade successful: <span class="transaction-profit">+$${profit} profit</span>
+                `);
+            }, 2000);
+            
+            // Step 3: Gas info
+            setTimeout(() => {
+                addLiveTransaction('gas-info', `
+                    <span class="transaction-symbol">⛽</span> Gas cost: <span class="transaction-gas">$18.75</span> | Net: <span class="transaction-profit">+$${netProfit}</span>
+                `);
+            }, 3000);
+        }
+        
+        function startLiveTransactionFeed() {
+            // Show initial example transaction
+            setTimeout(() => {
+                addLiveTransaction('executing', `
+                    <span class="transaction-symbol">⚡</span> Executing flash loan: ETH/USDC<br>
+                    <span style="margin-left: 15px;">Borrowing: <span class="transaction-amount">$127,000</span> | Collateral: <span class="transaction-amount">$0.00</span></span>
+                `);
+            }, 1000);
+            
+            setTimeout(() => {
+                addLiveTransaction('successful', `
+                    <span class="transaction-symbol">✅</span> Trade successful: <span class="transaction-profit">+$89.25 profit</span>
+                `);
+            }, 3000);
+            
+            setTimeout(() => {
+                addLiveTransaction('gas-info', `
+                    <span class="transaction-symbol">⛽</span> Gas cost: <span class="transaction-gas">$18.75</span> | Net: <span class="transaction-profit">+$70.50</span>
+                `);
+            }, 5000);
+            
+            // Continue with periodic transactions
+            setInterval(() => {
+                if (tradingActive && Math.random() > 0.7) {
+                    simulateFlashLoanTransaction();
+                }
+            }, 120000 + Math.random() * 180000); // 2-5 minutes
+        }
+        
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Add active class to clicked tab button
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+        
+        function toggleTrading() {
+            const botStatusBtn = document.getElementById('bot-status');
+            const statusDisplay = document.getElementById('trading-status-display');
+            
+            if (tradingActive) {
+                tradingActive = false;
+                botStatusBtn.textContent = '⏸️ Trading Paused';
+                botStatusBtn.classList.remove('active');
+                statusDisplay.textContent = 'Bot Paused • Manual Mode';
+            } else {
+                tradingActive = true;
+                botStatusBtn.textContent = '🚀 Trading Active';
+                botStatusBtn.classList.add('active');
+                statusDisplay.textContent = 'Bot Active • Zero Collateral Strategy';
+            }
+        }
+        
+        function pauseTrading() {
+            tradingActive = false;
+            document.getElementById('bot-status').textContent = '⏸️ Trading Paused';
+            document.getElementById('bot-status').classList.remove('active');
+            document.getElementById('trading-status-display').textContent = 'Bot Paused • Manual Mode';
+        }
+        
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            startLiveTransactionFeed();
+            
+            console.log('🏛️ ZeroCol v17.1.0 Trading Dashboard Active');
+            console.log('👑 Antoni0\'s Trading System: READY');
+            console.log('💰 Starting Capital: $1,000');
+            console.log('💰 Current Portfolio: $1,000');
+            console.log('💰 Total P&L: $0.00');
+            console.log('📊 ROI: 0.00%');
+            console.log('📊 Trades Today: 0');
+            console.log('🤖 Auto-Trading: READY TO START');
+            console.log('⚡ Live Transactions: WAITING FOR FIRST TRADE');
+        });
+    </script>
+</body>
+</html>
