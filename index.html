@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroCol v17.1.0 - Antoni0's Trading Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.8.2/web3.min.js"></script>
+    <title>ZeroCol v17.1.0 - Antoni0's Web3 Trading Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -119,12 +118,47 @@
             50% { opacity: 0.6; transform: scale(1.5); }
         }
         
-        .blockchain-status {
+        .connect-wallet-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            border: none;
+            border-radius: 25px;
+            color: #ffffff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+        
+        .connect-wallet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+        }
+        
+        .connect-wallet-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .wallet-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid #00ff88;
+            border-radius: 20px;
             font-size: 14px;
-            color: #00d4ff;
+        }
+        
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+        }
+        
+        .wallet-balance {
+            color: #ffd700;
+            font-weight: bold;
         }
         
         .tab-navigation {
@@ -472,6 +506,7 @@
             font-size: 14px;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: none;
         }
         
         .control-btn:hover {
@@ -512,6 +547,31 @@
             z-index: 1000;
             backdrop-filter: blur(10px);
         }
+
+        .wallet-not-connected {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .wallet-not-connected h3 {
+            color: #ff6644;
+            margin-bottom: 15px;
+        }
+
+        .network-switch-btn {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #ff6644, #ff4444);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
         
         @media (max-width: 768px) {
             .header-content {
@@ -546,10 +606,18 @@
             <div class="status-group">
                 <div class="status-indicator">
                     <div class="status-dot"></div>
-                    <span id="trading-status-display">Bot Active • Zero Collateral Strategy</span>
+                    <span id="trading-status-display">Ready • Zero Collateral Strategy</span>
                 </div>
-                <div class="blockchain-status">
-                    <span id="blockchain-status">⚡ Connecting to Blockchain...</span>
+                
+                <!-- Wallet Connection Area -->
+                <div id="wallet-connection">
+                    <button id="connectWalletBtn" class="connect-wallet-btn">
+                        🔗 Connect Wallet
+                    </button>
+                    <div id="walletInfo" class="wallet-info" style="display: none;">
+                        <span class="wallet-address" id="walletAddress"></span>
+                        <span class="wallet-balance" id="walletBalance"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -584,65 +652,73 @@
             <strong>🚀 ZeroCol v17.1.0 Status:</strong> Starting Capital: $1,000 | Current Portfolio: $1,000 | Ready to Begin Trading | Antoni0's Legendary System READY
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value zero-risk">$0.00</div>
-                <div class="stat-label">🏦 Collateral Required</div>
-                <div class="stat-change zero-risk">Flash loans need zero collateral!</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-value positive" id="total-profit">$0.00</div>
-                <div class="stat-label">💰 Total Profit</div>
-                <div class="stat-change positive">Ready to start trading</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-value" id="portfolio-value">$1,000</div>
-                <div class="stat-label">💼 Portfolio Value</div>
-                <div class="stat-change zero-risk">Starting Capital</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-value" id="trades-today">0</div>
-                <div class="stat-label">⚡ Trades Today</div>
-                <div class="stat-change positive">System ready</div>
-            </div>
+        <div id="walletConnectionRequired" class="wallet-not-connected">
+            <h3>🔗 Connect Your Wallet to Start Trading</h3>
+            <p>Connect your MetaMask wallet to access the full ZeroCol v17.1.0 trading dashboard</p>
+            <button onclick="connectWallet()" class="network-switch-btn">🦊 Connect MetaMask</button>
         </div>
 
-        <div class="charts-section">
-            <div class="chart-container">
-                <div class="chart-title">📈 Portfolio Growth (Ready to Start)</div>
-                <div class="chart-placeholder">
-                    <div class="profit-line"></div>
-                    <div style="text-align: center; z-index: 10; position: relative;">
-                        <div style="font-size: 28px; margin-bottom: 15px;">🚀 Antoni0's ZeroCol Ready</div>
-                        <div style="opacity: 0.8; margin-bottom: 20px;">Flash loan arbitrage system initialized</div>
-                        <div style="font-size: 18px; color: #ffd700; margin-bottom: 10px;">
-                            Starting Capital: $1,000 | Current: $1,000 | Profit: $0.00
-                        </div>
-                        <div style="font-size: 16px; color: #00d4ff; margin-bottom: 10px;">
-                            Total Trades: 0 | Win Rate: -- | System: READY
-                        </div>
-                        <div style="font-size: 14px; color: #ffd700;">
-                            ⚡ Zero Risk Strategy: Only gas costs at risk
+        <div id="dashboardContent" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value zero-risk">$0.00</div>
+                    <div class="stat-label">🏦 Collateral Required</div>
+                    <div class="stat-change zero-risk">Flash loans need zero collateral!</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value positive" id="total-profit">$0.00</div>
+                    <div class="stat-label">💰 Total Profit</div>
+                    <div class="stat-change positive">Ready to start trading</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value" id="portfolio-value">$1,000</div>
+                    <div class="stat-label">💼 Portfolio Value</div>
+                    <div class="stat-change zero-risk">Starting Capital</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value" id="trades-today">0</div>
+                    <div class="stat-label">⚡ Trades Today</div>
+                    <div class="stat-change positive">System ready</div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <div class="chart-title">📈 Portfolio Growth (Ready to Start)</div>
+                    <div class="chart-placeholder">
+                        <div class="profit-line"></div>
+                        <div style="text-align: center; z-index: 10; position: relative;">
+                            <div style="font-size: 28px; margin-bottom: 15px;">🚀 Antoni0's ZeroCol Ready</div>
+                            <div style="opacity: 0.8; margin-bottom: 20px;">Flash loan arbitrage system initialized</div>
+                            <div style="font-size: 18px; color: #ffd700; margin-bottom: 10px;">
+                                Starting Capital: $1,000 | Current: $1,000 | Profit: $0.00
+                            </div>
+                            <div style="font-size: 16px; color: #00d4ff; margin-bottom: 10px;">
+                                Total Trades: 0 | Win Rate: -- | System: READY
+                            </div>
+                            <div style="font-size: 14px; color: #ffd700;">
+                                ⚡ Zero Risk Strategy: Only gas costs at risk
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="chart-container">
-                <div class="chart-title">🎯 Trading Frequency</div>
-                <div class="chart-placeholder" style="height: 350px;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 20px; margin-bottom: 15px;">📊 Target Daily Stats</div>
-                        <div style="font-size: 48px; color: #00d4ff; margin: 20px 0; text-shadow: 0 0 20px currentColor;">45-60</div>
-                        <div style="opacity: 0.8; margin-bottom: 20px;">Expected Trades Per Day</div>
-                        <div style="font-size: 14px;">
-                            <div style="color: #00ff88; margin-bottom: 8px;">⚡ Flash Loans: 18-25/day target</div>
-                            <div style="color: #00d4ff; margin-bottom: 8px;">🔄 Arbitrage: 15-20/day target</div>
-                            <div style="color: #a855f7; margin-bottom: 8px;">🏦 Staking: 2-5/day target</div>
-                            <div style="color: #ffd700;">🎯 Today: 0 trades (ready to start)</div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">🎯 Trading Frequency</div>
+                    <div class="chart-placeholder" style="height: 350px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 20px; margin-bottom: 15px;">📊 Target Daily Stats</div>
+                            <div style="font-size: 48px; color: #00d4ff; margin: 20px 0; text-shadow: 0 0 20px currentColor;">45-60</div>
+                            <div style="opacity: 0.8; margin-bottom: 20px;">Expected Trades Per Day</div>
+                            <div style="font-size: 14px;">
+                                <div style="color: #00ff88; margin-bottom: 8px;">⚡ Flash Loans: 18-25/day target</div>
+                                <div style="color: #00d4ff; margin-bottom: 8px;">🔄 Arbitrage: 15-20/day target</div>
+                                <div style="color: #a855f7; margin-bottom: 8px;">🏦 Staking: 2-5/day target</div>
+                                <div style="color: #ffd700;">🎯 Today: 0 trades (ready to start)</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -813,16 +889,16 @@
                 <div class="stat-card">
                     <div style="font-size: 24px; margin-bottom: 10px;">🎯</div>
                     <div style="font-size: 32px; font-weight: 700; color: #00ff88; margin-bottom: 5px;">73.2%</div>
-                    <div style="font-size: 14px; opacity: 0.7;">Success Rate</div>
+                    <div style="font-size: 14px; opacity: 0.7;">Target Success Rate</div>
                 </div>
                 <div class="stat-card">
                     <div style="font-size: 24px; margin-bottom: 10px;">⚡</div>
                     <div style="font-size: 32px; font-weight: 700; color: #00d4ff; margin-bottom: 5px;">52</div>
-                    <div style="font-size: 14px; opacity: 0.7;">Avg Trades/Day</div>
+                    <div style="font-size: 14px; opacity: 0.7;">Target Trades/Day</div>
                 </div>
                 <div class="stat-card">
                     <div style="font-size: 24px; margin-bottom: 10px;">💎</div>
-                    <div style="font-size: 32px; font-weight: 700; color: #ffd700; margin-bottom: 5px;">423</div>
+                    <div style="font-size: 32px; font-weight: 700; color: #ffd700; margin-bottom: 5px;">0</div>
                     <div style="font-size: 14px; opacity: 0.7;">Flash Loans</div>
                 </div>
                 <div class="stat-card">
@@ -858,8 +934,8 @@
                 </div>
                 <div class="stat-card">
                     <div style="font-size: 24px; margin-bottom: 10px;">🌐</div>
-                    <div style="font-size: 20px; font-weight: 600; color: #88ccff; margin-bottom: 8px;">API Integration</div>
-                    <div style="font-size: 12px; background: rgba(136, 204, 255, 0.2); border-radius: 10px; padding: 4px 8px; color: #88ccff;">🌐 CONNECTED</div>
+                    <div style="font-size: 20px; font-weight: 600; color: #88ccff; margin-bottom: 8px;">Web3 Integration</div>
+                    <div style="font-size: 12px; background: rgba(136, 204, 255, 0.2); border-radius: 10px; padding: 4px 8px; color: #88ccff;" id="web3Status">🌐 READY</div>
                 </div>
             </div>
             
@@ -874,25 +950,216 @@
     </div>
 
     <div class="floating-controls">
-        <div class="control-btn active" id="bot-status" onclick="toggleTrading()">🚀 Trading Active</div>
-        <div class="control-btn" onclick="pauseTrading()">⏸️ Pause Trading</div>
-        <div class="control-btn" onclick="showTab('systems')">🏛️ Systems</div>
-        <div class="control-btn" onclick="showTab('analytics')">📊 Analytics</div>
+        <button class="control-btn" id="bot-status" onclick="toggleTrading()" disabled>
+            🚀 Trading Ready
+        </button>
+        <button class="control-btn" onclick="pauseTrading()">⏸️ Pause Trading</button>
+        <button class="control-btn" onclick="showTab('systems')">🏛️ Systems</button>
+        <button class="control-btn" onclick="showTab('analytics')">📊 Analytics</button>
     </div>
 
     <div class="blockchain-connection">
-        <span id="connection-status">⚡ Blockchain: Connected</span>
+        <span id="connection-status">⚡ Web3: Ready</span>
     </div>
 
     <div class="antonio-signature">
         🔒 ANTONI0'S IP<br>
         v17.1.0 ULTIMATE<br>
-        🚀 TRADING ACTIVE
+        🚀 WEB3 READY
     </div>
 
     <script>
-        let tradingActive = true;
-        let sessionStartTime = Date.now() - (6 * 60 * 60 * 1000 + 23 * 60 * 1000);
+        let web3;
+        let userAccount = null;
+        let tradingActive = false;
+        let isConnected = false;
+        let currentChainId = null;
+        
+        // Sepolia testnet configuration
+        const SEPOLIA_CHAIN_ID = '0xaa36a7';
+        const SEPOLIA_CONFIG = {
+            chainId: SEPOLIA_CHAIN_ID,
+            chainName: 'Sepolia Testnet',
+            nativeCurrency: {
+                name: 'SepoliaETH',
+                symbol: 'ETH',
+                decimals: 18
+            },
+            rpcUrls: ['https://sepolia.infura.io/v3/'],
+            blockExplorerUrls: ['https://sepolia.etherscan.io/']
+        };
+        
+        // Initialize Web3 connection
+        async function initializeWeb3() {
+            if (typeof window.ethereum !== 'undefined') {
+                console.log('✅ MetaMask detected!');
+                document.getElementById('connection-status').textContent = '⚡ MetaMask: Detected';
+                return true;
+            } else {
+                console.log('❌ MetaMask not found');
+                document.getElementById('connection-status').textContent = '❌ MetaMask: Not Found';
+                alert('Please install MetaMask to use ZeroCol v17.1.0!');
+                return false;
+            }
+        }
+        
+        // Connect wallet function
+        async function connectWallet() {
+            try {
+                if (!window.ethereum) {
+                    alert('Please install MetaMask!');
+                    return;
+                }
+                
+                console.log('🔗 Attempting to connect wallet...');
+                document.getElementById('connectWalletBtn').textContent = '🔄 Connecting...';
+                document.getElementById('connectWalletBtn').disabled = true;
+                
+                // Request account access
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                if (accounts.length === 0) {
+                    throw new Error('No accounts found');
+                }
+                
+                userAccount = accounts[0];
+                console.log('✅ Account connected:', userAccount);
+                
+                // Check current network
+                const chainId = await window.ethereum.request({
+                    method: 'eth_chainId'
+                });
+                
+                currentChainId = chainId;
+                console.log('🌐 Current network:', chainId);
+                
+                if (chainId !== SEPOLIA_CHAIN_ID) {
+                    await switchToSepolia();
+                } else {
+                    await onWalletConnected();
+                }
+                
+            } catch (error) {
+                console.error('❌ Connection failed:', error);
+                document.getElementById('connectWalletBtn').textContent = '🔗 Connect Wallet';
+                document.getElementById('connectWalletBtn').disabled = false;
+                
+                if (error.code === 4001) {
+                    alert('Please approve the connection in MetaMask');
+                } else {
+                    alert('Failed to connect wallet: ' + error.message);
+                }
+            }
+        }
+        
+        // Switch to Sepolia network
+        async function switchToSepolia() {
+            try {
+                console.log('🔄 Switching to Sepolia testnet...');
+                
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: SEPOLIA_CHAIN_ID }],
+                });
+                
+                console.log('✅ Switched to Sepolia testnet');
+                await onWalletConnected();
+                
+            } catch (error) {
+                console.error('❌ Network switch failed:', error);
+                
+                if (error.code === 4902) {
+                    // Network not added to MetaMask, try to add it
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [SEPOLIA_CONFIG],
+                        });
+                        console.log('✅ Sepolia network added');
+                        await onWalletConnected();
+                    } catch (addError) {
+                        console.error('❌ Failed to add network:', addError);
+                        alert('Please manually switch to Sepolia testnet in MetaMask');
+                    }
+                } else {
+                    alert('Please manually switch to Sepolia testnet in MetaMask');
+                }
+            }
+        }
+        
+        // Handle successful wallet connection
+        async function onWalletConnected() {
+            try {
+                isConnected = true;
+                
+                // Get balance
+                const balance = await window.ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [userAccount, 'latest']
+                });
+                
+                const ethBalance = parseFloat(parseInt(balance, 16) / Math.pow(10, 18)).toFixed(4);
+                
+                // Update UI
+                const shortAddress = userAccount.slice(0, 6) + '...' + userAccount.slice(-4);
+                document.getElementById('walletAddress').textContent = shortAddress;
+                document.getElementById('walletBalance').textContent = `${ethBalance} ETH`;
+                
+                // Hide connect button, show wallet info
+                document.getElementById('connectWalletBtn').style.display = 'none';
+                document.getElementById('walletInfo').style.display = 'flex';
+                
+                // Hide wallet connection required message
+                document.getElementById('walletConnectionRequired').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                
+                // Update status indicators
+                document.getElementById('connection-status').textContent = '✅ Sepolia: Connected';
+                document.getElementById('web3Status').textContent = '🌐 CONNECTED';
+                document.getElementById('trading-status-display').textContent = 'Wallet Connected • Ready to Trade';
+                
+                // Enable trading controls
+                document.getElementById('bot-status').disabled = false;
+                document.getElementById('bot-status').textContent = '🚀 Start Trading';
+                
+                console.log('🎉 ZeroCol v17.1.0 Web3 connection successful!');
+                console.log(`💰 Balance: ${ethBalance} ETH`);
+                console.log('🚀 Ready to start trading!');
+                
+                // Start live transaction feed
+                startLiveTransactionFeed();
+                
+            } catch (error) {
+                console.error('❌ Error getting wallet info:', error);
+            }
+        }
+        
+        // Handle account/network changes
+        function setupEventListeners() {
+            if (window.ethereum) {
+                window.ethereum.on('accountsChanged', function (accounts) {
+                    if (accounts.length === 0) {
+                        // User disconnected
+                        console.log('👋 Wallet disconnected');
+                        location.reload();
+                    } else if (accounts[0] !== userAccount) {
+                        // User switched accounts
+                        console.log('🔄 Account changed');
+                        location.reload();
+                    }
+                });
+                
+                window.ethereum.on('chainChanged', function (chainId) {
+                    console.log('🌐 Network changed:', chainId);
+                    if (chainId !== SEPOLIA_CHAIN_ID) {
+                        alert('Please switch back to Sepolia testnet for ZeroCol v17.1.0');
+                        location.reload();
+                    }
+                });
+            }
+        }
         
         // Live transaction feed system
         function addLiveTransaction(type, content) {
@@ -913,6 +1180,8 @@
         }
         
         function simulateFlashLoanTransaction() {
+            if (!isConnected || !tradingActive) return;
+            
             const pairs = ['ETH/USDC', 'ETH/DAI', 'ETH/USDT'];
             const pair = pairs[Math.floor(Math.random() * pairs.length)];
             const borrowAmount = Math.floor(Math.random() * 100000 + 50000);
@@ -943,6 +1212,8 @@
         }
         
         function startLiveTransactionFeed() {
+            if (!isConnected) return;
+            
             // Show initial example transaction
             setTimeout(() => {
                 addLiveTransaction('executing', `
@@ -963,7 +1234,7 @@
                 `);
             }, 5000);
             
-            // Continue with periodic transactions
+            // Continue with periodic transactions when trading is active
             setInterval(() => {
                 if (tradingActive && Math.random() > 0.7) {
                     simulateFlashLoanTransaction();
@@ -997,6 +1268,11 @@
         }
         
         function toggleTrading() {
+            if (!isConnected) {
+                alert('Please connect your wallet first!');
+                return;
+            }
+            
             const botStatusBtn = document.getElementById('bot-status');
             const statusDisplay = document.getElementById('trading-status-display');
             
@@ -1004,35 +1280,55 @@
                 tradingActive = false;
                 botStatusBtn.textContent = '⏸️ Trading Paused';
                 botStatusBtn.classList.remove('active');
-                statusDisplay.textContent = 'Bot Paused • Manual Mode';
+                statusDisplay.textContent = 'Trading Paused • Manual Mode';
             } else {
                 tradingActive = true;
                 botStatusBtn.textContent = '🚀 Trading Active';
                 botStatusBtn.classList.add('active');
-                statusDisplay.textContent = 'Bot Active • Zero Collateral Strategy';
+                statusDisplay.textContent = 'Trading Active • Zero Collateral Strategy';
             }
         }
         
         function pauseTrading() {
+            if (!isConnected) return;
+            
             tradingActive = false;
-            document.getElementById('bot-status').textContent = '⏸️ Trading Paused';
+            document.getElementById('bot-status').textContent = '▶️ Start Trading';
             document.getElementById('bot-status').classList.remove('active');
-            document.getElementById('trading-status-display').textContent = 'Bot Paused • Manual Mode';
+            document.getElementById('trading-status-display').textContent = 'Trading Paused • Manual Mode';
         }
         
         // Initialize everything when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            startLiveTransactionFeed();
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🏛️ ZeroCol v17.1.0 Web3 Dashboard Loading...');
             
-            console.log('🏛️ ZeroCol v17.1.0 Trading Dashboard Active');
-            console.log('👑 Antoni0\'s Trading System: READY');
+            // Initialize Web3
+            const web3Available = await initializeWeb3();
+            
+            if (web3Available) {
+                // Setup event listeners for MetaMask
+                setupEventListeners();
+                
+                // Auto-connect if already connected
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (accounts.length > 0) {
+                        userAccount = accounts[0];
+                        await onWalletConnected();
+                    }
+                } catch (error) {
+                    console.log('No auto-connection available');
+                }
+            }
+            
+            // Add connect wallet click handler
+            document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
+            
+            console.log('🏛️ ZeroCol v17.1.0 Web3 Dashboard Ready!');
+            console.log('👑 Antoni0\'s Trading System: INITIALIZED');
             console.log('💰 Starting Capital: $1,000');
-            console.log('💰 Current Portfolio: $1,000');
-            console.log('💰 Total P&L: $0.00');
-            console.log('📊 ROI: 0.00%');
-            console.log('📊 Trades Today: 0');
-            console.log('🤖 Auto-Trading: READY TO START');
-            console.log('⚡ Live Transactions: WAITING FOR FIRST TRADE');
+            console.log('🌐 Web3: READY');
+            console.log('🚀 Connect wallet to begin trading!');
         });
     </script>
 </body>
